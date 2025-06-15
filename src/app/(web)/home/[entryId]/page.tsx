@@ -1,23 +1,19 @@
-import { getEntryById } from "@/lib/queries/get-entry";
 import { EntryForm } from "./_components/entry-form";
+import { EntryProgress } from "./_components/entry-progress";
+import { getEntryById } from "@/lib/queries/get-entry";
+import { notFound } from "next/navigation";
+import { EntryClient } from "./_components/entry-client";
 
-interface EntryPageProps {
-  params: {
-    entryId: string;
-  };
+interface PageProps {
+  params: { entryId: string };
 }
 
-export default async function EntryPage({ params }: EntryPageProps) {
-  const { entryId } = await params;
-  console.log(entryId);
-  const entry = await getEntryById(entryId);
-  console.log(entry);
+export default async function EntryPage({ params }: PageProps) {
+  const entry = await getEntryById(params.entryId);
+  
   if (!entry) {
-    return <div>Entry not found</div>;
+    notFound();
   }
-  return (
-    <div>
-      <EntryForm {...entry} />
-    </div>
-  );
+
+  return <EntryClient entry={entry} />;
 }

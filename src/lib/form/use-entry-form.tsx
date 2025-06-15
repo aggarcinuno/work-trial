@@ -23,6 +23,7 @@ export const useEntryForm = (entry: z.infer<typeof EntryFormSchema>) => {
       user_id: entry.user_id,
       answerChoices: entry.answerChoices || [],
     },
+    values: entry,
   });
   return form;
 };

@@ -5,39 +5,60 @@ import debounce from "lodash/debounce";
 import { toast } from "sonner";
 import { z } from "zod";
 import { EntryFormSchema } from "../form/entry-form-schema";
+import { saveEntry } from "../actions/save-entry";
+
+type FormData = z.infer<typeof EntryFormSchema>;
 
 type UseFormAutoSaveProps = {
-  entry: z.infer<typeof EntryFormSchema>;
+  entry_id: string;
 };
 
-export const useFormAutoSave = ({ entry }: UseFormAutoSaveProps) => {
+const defaultFormData: FormData = {
+  subject: "",
+  question: "",
+  image: "",
+  answerLong: "",
+  answerMultipleChoice: "",
+  hint: "",
+  answerChoices: [],
+};
+
+export const useFormAutoSave = ({ entry_id }: UseFormAutoSaveProps) => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { control } = useFormContext();
+  const { control } = useFormContext<FormData>();
   const { isDirty, dirtyFields } = useFormState({ control });
 
-  const watchedData = useWatch({
+  const watchedData = useWatch<FormData>({
     control: control,
-    defaultValue: entry,
+    defaultValue: defaultFormData,
+  });
+
+  // Watch specific fields to ensure they trigger auto-save
+  useWatch({
+    control,
+    name: "image",
   });
 
   const debouncedSave = useCallback(
-    debounce(async (data: z.infer<typeof EntryFormSchema>) => {
+    debounce(async (data: Partial<FormData>) => {
       try {
         setIsSaving(true);
-        // TODO: Implement your save logic here
-        // For now, we'll just simulate a save
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Merge with default values to ensure all required fields are present
+        const completeData = { ...defaultFormData, ...data };
+        console.log("Saving entry:", completeData);
+
+        await saveEntry(entry_id, completeData);
         setLastSaved(new Date());
-        toast.success("Changes saved automatically");
       } catch (error) {
+        console.error("Error auto-saving:", error);
         toast.error("Error auto-saving form, please try again.");
       } finally {
         setIsSaving(false);
       }
     }, 1000),
-    []
+    [entry_id]
   );
 
   useDeepCompareEffect(() => {
@@ -47,4 +68,4 @@ export const useFormAutoSave = ({ entry }: UseFormAutoSaveProps) => {
   }, [watchedData]);
 
   return { isSaving, lastSaved };
-}; 
+};

@@ -20,10 +20,17 @@ import { toast } from "sonner";
 
 export function FileUploadDirectUploadDemo({
   onImageUpload,
+  initialImage,
 }: {
   onImageUpload?: (url: string) => void;
+  initialImage?: string;
 }) {
   const [files, setFiles] = React.useState<File[]>([]);
+  const [previewUrl, setPreviewUrl] = React.useState<string | undefined>(initialImage);
+
+  React.useEffect(() => {
+    setPreviewUrl(initialImage);
+  }, [initialImage]);
 
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = React.useCallback(
     async (files, { onProgress, onSuccess, onError }) => {
@@ -46,7 +53,8 @@ export function FileUploadDirectUploadDemo({
             onProgress(file, 100);
             onSuccess(file);
             
-            // Call the onImageUpload callback with the URL
+            // Update preview URL and call the onImageUpload callback
+            setPreviewUrl(imageUrl);
             onImageUpload?.(imageUrl);
           } catch (error) {
             onError(
@@ -90,27 +98,52 @@ export function FileUploadDirectUploadDemo({
       disabled={files.length > 0}
     >
       <FileUploadDropzone>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <div className="flex items-center justify-center rounded-full border p-2.5">
-            <Upload className="size-6 text-muted-foreground" />
+        {previewUrl ? (
+          <div className="relative w-full aspect-video">
+            <img
+              src={previewUrl}
+              alt="Uploaded diagram"
+              className="w-full h-full object-contain rounded-lg"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewUrl(undefined);
+                setFiles([]);
+                onImageUpload?.("");
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <p className="font-medium text-sm">
-            {files.length > 0 ? "File uploaded" : "Drag & drop file here"}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {files.length > 0 ? "Remove existing file to upload a new one" : "Or click to browse (max 1 file)"}
-          </p>
-        </div>
-        <FileUploadTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-2 w-fit"
-            disabled={files.length > 0}
-          >
-            Browse files
-          </Button>
-        </FileUploadTrigger>
+        ) : (
+          <>
+            <div className="flex flex-col items-center gap-1 text-center">
+              <div className="flex items-center justify-center rounded-full border p-2.5">
+                <Upload className="size-6 text-muted-foreground" />
+              </div>
+              <p className="font-medium text-sm">
+                {files.length > 0 ? "File uploaded" : "Drag & drop file here"}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {files.length > 0 ? "Remove existing file to upload a new one" : "Or click to browse (max 1 file)"}
+              </p>
+            </div>
+            <FileUploadTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 w-fit"
+                disabled={files.length > 0}
+              >
+                Browse files
+              </Button>
+            </FileUploadTrigger>
+          </>
+        )}
       </FileUploadDropzone>
       <FileUploadList>
         {files.map((file, index) => (

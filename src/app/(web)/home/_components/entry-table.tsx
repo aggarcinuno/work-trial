@@ -37,9 +37,43 @@ type Entry = z.infer<typeof EntryFormSchema>;
 
 const columns: ColumnDef<Entry>[] = [
   {
-    accessorKey: "category",
+    accessorKey: "subject",
     header: "Subject",
-    cell: ({ row }) => row.getValue("category") || "Uncategorized",
+    cell: ({ row }) => {
+      const subject = row.getValue("subject") as string;
+      const getSubjectColor = (subject: string) => {
+        switch (subject) {
+          case "geometry":
+            return "bg-blue-500";
+          case "math":
+            return "bg-red-500";
+          case "biology":
+            return "bg-green-500";
+          case "physics":
+            return "bg-purple-500";
+          case "chemistry":
+            return "bg-yellow-500";
+          default:
+            return "bg-gray-500";
+        }
+      };
+
+      const capitalizeFirstLetter = (str: string) => {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      };
+
+      return (
+        <Badge
+          variant="outline"
+          className="bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <div className={`h-2 w-2 rounded-full ${getSubjectColor(subject)}`} />
+            <span>{subject ? capitalizeFirstLetter(subject) : "Uncategorized"}</span>
+          </div>
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "question",
@@ -130,8 +164,11 @@ export function EntryTable({ entries }: { entries: Entry[] }) {
           <TableHeader className="bg-gray-200">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-gray-900 border-b">
+                {headerGroup.headers.map((header, index) => (
+                  <TableHead 
+                    key={header.id} 
+                    className={`text-gray-900 border-b ${index === 0 ? 'pl-4' : ''}`}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -151,8 +188,11 @@ export function EntryTable({ entries }: { entries: Entry[] }) {
                   onClick={() => router.push(`/home/${row.original.entry_id}`)}
                   className="cursor-pointer hover:bg-gray-50 transition-colors"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="border-b">
+                  {row.getVisibleCells().map((cell, index) => (
+                    <TableCell 
+                      key={cell.id} 
+                      className={`border-b ${index === 0 ? "pl-4" : ""}`}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

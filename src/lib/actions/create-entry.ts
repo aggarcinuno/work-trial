@@ -12,12 +12,8 @@ export async function createEntry() {
   const entryData: z.infer<typeof EntryFormSchema> = {
     question: "",
     answerLong: "",
-    answerMultipleChoice: [],
+    answerMultipleChoice: "",
     hint: "",
-    aiAnswerLongNoHint: "",
-    aiAnswerMultipleChoiceNoHint: [],
-    aiAnswerLongWithHint: "",
-    aiAnswerMultipleChoiceWithHint: [],
     image: "",
     subject: "",
     answerChoices: [],
