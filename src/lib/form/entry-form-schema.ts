@@ -11,4 +11,6 @@ export const EntryFormSchema = z.object({
   created_at: z.string().optional(),
   user_id: z.string().optional(),
   answerChoices: z.array(z.string()).optional(),
+  lastSaved: z.string().optional(),
+  status: z.string().optional(),
 });

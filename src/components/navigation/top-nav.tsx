@@ -6,6 +6,7 @@ import { createEntry } from "@/lib/actions/create-entry";
 import { useCreateEntry } from "@/lib/hooks/use-create-entry";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ProfileDropdown } from "@/app/(web)/home/_components/profile-dropdown";
 
 export function TopNav() {
   const router = useRouter();

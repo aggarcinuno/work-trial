@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { EntryFormSchema } from "@/lib/form/entry-form-schema";
-import { useEntryForm } from "@/lib/form/use-entry-form";
+import { useEntryForm } from "@/lib/hooks/use-entry-form";
 import { useFormAutoSave } from "@/lib/hooks/use-form-auto-save";
 import { Clock } from "lucide-react";
 import { z } from "zod";
@@ -19,21 +19,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Controller } from "react-hook-form";
+import { getEntrySubmissions } from "@/lib/queries/get-entry-submissions";
 
 interface EntryFormProps {
-  entry_id: string;
   entry: z.infer<typeof EntryFormSchema>;
   onComplete: (data: z.infer<typeof EntryFormSchema>) => void;
 }
 
-export function EntryForm({ entry_id, entry, onComplete }: EntryFormProps) {
+export function EntryForm({ entry, onComplete }: EntryFormProps) {
   const form = useEntryForm(entry);
   const answerChoices = form.watch("answerChoices") || [];
-  const image = form.watch("image");
 
   const handleSubmit = async () => {
     const values = form.getValues();
     onComplete(values);
+  };
+
+  const handleDebugSubmissions = async () => {
+    const submissions = await getEntrySubmissions(entry.entry_id!);
+    console.log("Entry Submissions:", submissions);
   };
 
   return (
@@ -43,7 +47,7 @@ export function EntryForm({ entry_id, entry, onComplete }: EntryFormProps) {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold leading-none">Entry Details</h1>
             <span className="text-sm text-gray-600 leading-none">
-              (ID: {entry_id})
+              (ID: {entry.entry_id})
             </span>
           </div>
         </div>
@@ -52,9 +56,10 @@ export function EntryForm({ entry_id, entry, onComplete }: EntryFormProps) {
         <Form {...form}>
           <FormContent
             form={form}
-            entry_id={entry_id}
+            entry_id={entry.entry_id!}
             answerChoices={answerChoices}
             onSubmit={handleSubmit}
+            onDebugSubmissions={handleDebugSubmissions}
           />
         </Form>
       </CardContent>
@@ -72,8 +77,13 @@ function FormContent({
   entry_id: string;
   answerChoices: string[];
   onSubmit: () => void;
+  onDebugSubmissions: () => void;
 }) {
-  const { isSaving, lastSaved } = useFormAutoSave({ entry_id });
+  const { isSaving } = useFormAutoSave({ entry_id });
+  const {
+    formState: { isValid, errors },
+  } = form;
+  const lastSaved = form.getValues("lastSaved");
 
   return (
     <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
@@ -82,7 +92,7 @@ function FormContent({
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
             <span>
-              Last saved at {lastSaved.toLocaleTimeString()}
+              Last saved at {new Date(lastSaved).toLocaleTimeString()}
               {isSaving && " (Saving...)"}
             </span>
           </div>
@@ -134,6 +144,9 @@ function FormContent({
             </Select>
           )}
         />
+        {errors.subject && (
+          <p className="text-sm text-red-500 mt-1">{errors.subject.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -143,6 +156,9 @@ function FormContent({
           placeholder="Enter your question"
           {...form.register("question")}
         />
+        {errors.question && (
+          <p className="text-sm text-red-500 mt-1">{errors.question.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -157,6 +173,9 @@ function FormContent({
             });
           }}
         />
+        {errors.image && (
+          <p className="text-sm text-red-500 mt-1">{errors.image.message}</p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -175,6 +194,11 @@ function FormContent({
             </div>
           ))}
         </div>
+        {errors.answerChoices && (
+          <p className="text-sm text-red-500 mt-1">
+            {errors.answerChoices.message}
+          </p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -216,32 +240,20 @@ function FormContent({
             />
           </div>
         </div>
+        {errors.answerMultipleChoice && (
+          <p className="text-sm text-red-500 mt-1">
+            {errors.answerMultipleChoice.message}
+          </p>
+        )}
       </div>
 
       <Button
         type="button"
-        variant="outline"
-        className="w-full"
-        onClick={() => {
-          const values = form.getValues();
-          console.log("Form Values:", {
-            subject: values.subject,
-            question: values.question,
-            answerChoices: values.answerChoices,
-            answerMultipleChoice: values.answerMultipleChoice,
-            image: values.image,
-          });
-        }}
-      >
-        Debug Form Values
-      </Button>
-
-      <Button
-        type="button"
-        className="w-full bg-blue-500 hover:bg-blue-200 text-white"
+        className="w-full bg-blue-500 hover:bg-blue-200 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={onSubmit}
+        disabled={isSaving || Object.keys(errors).length > 0}
       >
-        Continue to AI Review
+        {isSaving ? "Saving..." : "Continue to AI Review"}
       </Button>
     </form>
   );

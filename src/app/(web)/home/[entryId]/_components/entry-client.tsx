@@ -1,62 +1,92 @@
 "use client";
 
-import { EntryForm } from "./entry-form";
-import { EntryProgress } from "./entry-progress";
 import { useState } from "react";
-import { z } from "zod";
-import { EntryFormSchema } from "@/lib/form/entry-form-schema";
 import { useRouter } from "next/navigation";
+import { EntryForm } from "./entry-form";
 import { createSubmission } from "@/lib/actions/create-submission";
+import { toast } from "sonner";
+import { EntryFormSchema } from "@/lib/form/entry-form-schema";
+import { SubmissionFormSchema } from "@/lib/form/submission-form-schema";
+import { z } from "zod";
+import { EntryProgress } from "./entry-progress";
+import { SubmissionForm } from "./submission-form";
+import { SolutionForm } from "./solution-form";
 
 interface EntryClientProps {
   entry: z.infer<typeof EntryFormSchema>;
+  submissions: z.infer<typeof SubmissionFormSchema>[];
 }
 
-export function EntryClient({ entry }: EntryClientProps) {
+export function EntryClient({ entry, submissions }: EntryClientProps) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
+  console.log("submissions", submissions);
 
-  const handleFormComplete = async (data: z.infer<typeof EntryFormSchema>) => {
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (!submissions) return 1;
+    const maxStep = submissions.reduce((max, submission) => {
+      return submission.step && submission.step > max ? submission.step : max;
+    }, 0);
+    return maxStep + 1;
+  });
+
+  const handleFormComplete = async () => {
+    if (!entry.entry_id) {
+      toast.error("Entry ID is missing");
+      return;
+    }
+
     try {
-      // Create a new submission
-      const result = await createSubmission({
-        entryId: entry.entry_id!,
-        question: data.question,
-        answerChoices: data.answerChoices || [],
-        diagram: data.image,
+      await createSubmission({
+        entryId: entry.entry_id,
+        status: "pending",
       });
-
-      if (result.success && result.submissionId) {
-        // Navigate to the submission page
-        router.push(`/home/${entry.entry_id}/${result.submissionId}`);
-      }
+      setCurrentStep(currentStep + 1);
     } catch (error) {
       console.error("Error creating submission:", error);
+      toast.error("Failed to create submission. Please try again.");
     }
+  };
+
+  const handleSubmissionComplete = async () => {
+    setCurrentStep(currentStep + 1);
+  };
+
+  const handleSolutionSubmit = async (data: any) => {
+    console.log("data", data);
+    router.push("/home");
   };
 
   const handleStepChange = (step: number) => {
-    // Only allow going back to previous steps
-    if (step < currentStep) {
-      setCurrentStep(step);
-    }
+    setCurrentStep(step);
   };
 
+  if (!entry.entry_id) {
+    return null;
+  }
+
   return (
-    <div className="container py-6 space-y-6">
+    <>
       <EntryProgress
         currentStep={currentStep}
-        totalSteps={5}
         onStepChange={handleStepChange}
       />
-
       {currentStep === 1 && (
-        <EntryForm
-          entry_id={entry.entry_id!}
+        <EntryForm entry={entry} onComplete={handleFormComplete} />
+      )}
+      {currentStep === 2 && (
+        <SubmissionForm
           entry={entry}
-          onComplete={handleFormComplete}
+          submission={submissions[currentStep - 1]}
+          onComplete={handleSubmissionComplete}
         />
       )}
-    </div>
+      {currentStep === 3 && (
+        <SolutionForm
+          onSubmit={handleSolutionSubmit}
+          entryId={entry.entry_id}
+          entry={entry}
+        />
+      )}
+    </>
   );
 }

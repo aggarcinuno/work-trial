@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { EntryFormSchema } from "./entry-form-schema";
+import { EntryFormSchema } from "@/lib/form/entry-form-schema";
 
 export const useEntryForm = (entry: z.infer<typeof EntryFormSchema>) => {
   const form = useForm<z.infer<typeof EntryFormSchema>>({
@@ -14,14 +14,11 @@ export const useEntryForm = (entry: z.infer<typeof EntryFormSchema>) => {
       answerLong: entry.answerLong || "",
       answerMultipleChoice: entry.answerMultipleChoice || "",
       hint: entry.hint || "",
-      aiAnswerLongNoHint: entry.aiAnswerLongNoHint || "",
-      aiAnswerMultipleChoiceNoHint: entry.aiAnswerMultipleChoiceNoHint || [],
-      aiAnswerLongWithHint: entry.aiAnswerLongWithHint || "",
-      aiAnswerMultipleChoiceWithHint: entry.aiAnswerMultipleChoiceWithHint || [],
       entry_id: entry.entry_id,
       created_at: entry.created_at,
       user_id: entry.user_id,
       answerChoices: entry.answerChoices || [],
+      lastSaved: entry.lastSaved || "",
     },
     values: entry,
   });

@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDeleteEntry } from "@/lib/hooks/use-delete-entry";
+import { StatusTag } from "./status-tag";
 
 type Entry = z.infer<typeof EntryFormSchema>;
 
@@ -68,8 +69,12 @@ const columns: ColumnDef<Entry>[] = [
           className="bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
         >
           <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${getSubjectColor(subject)}`} />
-            <span>{subject ? capitalizeFirstLetter(subject) : "Uncategorized"}</span>
+            <div
+              className={`h-2 w-2 rounded-full ${getSubjectColor(subject)}`}
+            />
+            <span>
+              {subject ? capitalizeFirstLetter(subject) : "Uncategorized"}
+            </span>
           </div>
         </Badge>
       );
@@ -78,7 +83,13 @@ const columns: ColumnDef<Entry>[] = [
   {
     accessorKey: "question",
     header: "Question",
-    cell: ({ row }) => row.getValue("question"),
+    cell: ({ row }) => (
+      <div className="w-[250px]">
+        <p className="text-sm text-gray-700 line-clamp-4 overflow-hidden text-ellipsis whitespace-pre-wrap">
+          {row.getValue("question")}
+        </p>
+      </div>
+    ),
   },
   {
     accessorKey: "image",
@@ -99,14 +110,10 @@ const columns: ColumnDef<Entry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: () => (
-      <Badge
-        variant="outline"
-        className="bg-green-50 text-green-700 border-green-200"
-      >
-        Active
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const status = row.getValue("status") as "submitted" | "in_progress";
+      return <StatusTag status={status} />;
+    },
   },
   {
     accessorKey: "created_at",
@@ -165,9 +172,11 @@ export function EntryTable({ entries }: { entries: Entry[] }) {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header, index) => (
-                  <TableHead 
-                    key={header.id} 
-                    className={`text-gray-900 border-b ${index === 0 ? 'pl-4' : ''}`}
+                  <TableHead
+                    key={header.id}
+                    className={`text-gray-900 border-b ${
+                      index === 0 ? "pl-4" : ""
+                    }`}
                   >
                     {header.isPlaceholder
                       ? null
@@ -189,8 +198,8 @@ export function EntryTable({ entries }: { entries: Entry[] }) {
                   className="cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   {row.getVisibleCells().map((cell, index) => (
-                    <TableCell 
-                      key={cell.id} 
+                    <TableCell
+                      key={cell.id}
                       className={`border-b ${index === 0 ? "pl-4" : ""}`}
                     >
                       {flexRender(

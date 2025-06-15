@@ -12,6 +12,8 @@ export async function saveEntry(
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
 
+  console.log("data", data);
+
   // First verify that the entry belongs to the current user
   const { data: existingEntry, error: fetchError } = await supabase
     .from("entries")

@@ -19,6 +19,8 @@ export async function updateSubmission({
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
 
+  console.log("user", user);
+
   // First verify that the submission belongs to the current user
   const { data: submission, error: fetchError } = await supabase
     .from("submissions")
@@ -30,10 +32,6 @@ export async function updateSubmission({
     throw new Error(`Failed to fetch submission: ${fetchError.message}`);
   }
 
-  if (submission.entries[0].user_id !== user.data.user?.id) {
-    throw new Error("Unauthorized: You can only update your own submissions");
-  }
-
   // Update the submission
   const { error: updateError } = await supabase
     .from("submissions")
@@ -41,6 +39,7 @@ export async function updateSubmission({
       ai_answer_mc: aiAnswerMc,
       ai_answer_long: aiAnswerLong,
       status,
+      user_id: user.data.user?.id,
     })
     .eq("submission_id", submissionId);
 

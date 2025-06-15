@@ -17,6 +17,7 @@ export async function createEntry() {
     image: "",
     subject: "",
     answerChoices: [],
+    status: "in_progress",
   };
 
   const { data, error } = await supabase

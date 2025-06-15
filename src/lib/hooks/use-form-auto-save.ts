@@ -46,7 +46,11 @@ export const useFormAutoSave = ({ entry_id }: UseFormAutoSaveProps) => {
       try {
         setIsSaving(true);
         // Merge with default values to ensure all required fields are present
-        const completeData = { ...defaultFormData, ...data };
+        const completeData = {
+          ...defaultFormData,
+          ...data,
+          lastSaved: new Date().toISOString(),
+        };
         console.log("Saving entry:", completeData);
 
         await saveEntry(entry_id, completeData);

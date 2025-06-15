@@ -5,16 +5,12 @@ import { revalidatePath } from "next/cache";
 
 interface CreateSubmissionParams {
   entryId: string;
-  question: string;
-  answerChoices: string[];
-  diagram?: string;
+  status: string;
 }
 
 export async function createSubmission({
   entryId,
-  question,
-  answerChoices,
-  diagram,
+  status,
 }: CreateSubmissionParams) {
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
@@ -42,9 +38,7 @@ export async function createSubmission({
     .insert([
       {
         entry_id: entryId,
-        status: "pending", // pending, processing, completed, failed
-        ai_answer_long: null,
-        ai_answer_mc: null,
+        status: status, // pending, processing, completed, failed
         user_id: user.data.user?.id,
       },
     ])
