@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { FileUploadDirectUploadDemo } from "./_components/file-upload";
 import { createEntry } from "@/lib/actions/create-entry";
 
 interface QAPair {
@@ -97,7 +96,7 @@ export default function QADataCollector() {
           <Button
             loading={false}
             onClick={() => {
-              createEntry(new FormData());
+              createEntry();
             }}
           >
             <Plus className="h-4 w-4 mr-2" />
