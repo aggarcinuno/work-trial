@@ -36,6 +36,25 @@ import { StatusTag } from "./status-tag";
 
 type Entry = z.infer<typeof EntryFormSchema>;
 
+function DeleteButton({ entryId }: { entryId: string }) {
+  const { deleteEntry, isDeletingEntry } = useDeleteEntry();
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        if (entryId) {
+          deleteEntry(entryId);
+        }
+      }}
+      disabled={isDeletingEntry}
+      className="p-2 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+    >
+      <Trash2 className="h-4 w-4 text-gray-500 group-hover:text-red-500" />
+    </button>
+  );
+}
+
 const columns: ColumnDef<Entry>[] = [
   {
     accessorKey: "subject",
@@ -129,22 +148,7 @@ const columns: ColumnDef<Entry>[] = [
     id: "actions",
     cell: ({ row }) => {
       const entry = row.original;
-      const { deleteEntry, isDeletingEntry } = useDeleteEntry();
-
-      return (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (entry.entry_id) {
-              deleteEntry(entry.entry_id);
-            }
-          }}
-          disabled={isDeletingEntry}
-          className="p-2 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
-        >
-          <Trash2 className="h-4 w-4 text-gray-500 group-hover:text-red-500" />
-        </button>
-      );
+      return <DeleteButton entryId={entry.entry_id ?? ""} />;
     },
   },
 ];
