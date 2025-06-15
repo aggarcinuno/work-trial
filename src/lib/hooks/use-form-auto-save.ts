@@ -61,7 +61,7 @@ export const useFormAutoSave = ({ entry_id }: UseFormAutoSaveProps) => {
       } finally {
         setIsSaving(false);
       }
-    }, 1000),
+    }, 2000),
     [entry_id]
   );
 
